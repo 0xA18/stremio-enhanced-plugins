@@ -326,6 +326,7 @@
     }
 
     function createDropdown(found, text, className, onChange){
+        if (found.length < 2) return;
         const selector1 = document.createElement("div");
         selector1.innerHTML = `<div class="dd-toggle" role="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="dd-list-1" tabindex="0">
                 <span class="dd-label dd-placeholder">${text}</span>
@@ -366,7 +367,7 @@
 
         new DivDropdown(selector1, text);
 
-        const parent = document.querySelector(".streams-list-Y1lCM.streams-list-container-xYMJo");
+        const parent = document.querySelector(".select-choices-wrapper-xGzfs.filter-streams");
         parent.insertBefore(selector1, parent.firstChild);
     }
 
@@ -384,12 +385,16 @@
             const filmYear = document.querySelector(".release-info-label-LPJMB").innerHTML;
             const streams = parseStreamElements(streamLinks, filmYear);
             
+            const container = document.createElement("div");
+            container.classList.add("select-choices-wrapper-xGzfs", "filter-streams");
+            const parent = document.querySelector(".streams-list-Y1lCM.streams-list-container-xYMJo");
+            parent.insertBefore(container, parent.firstChild);
+
             let foundQualities = [];
             for (const stream of streams){
                 if (!foundQualities.includes(stream.quality))
                     foundQualities.push(stream.quality);
             }
-            createDropdown(foundQualities, "Quality", "quality-selection", (e) => {selectedStreams.quality = e.detail.value;});
 
             let foundLanguages = [];
             for (const stream of streams){
@@ -401,7 +406,7 @@
                 }
                 
             }
-            createDropdown(foundLanguages, "Language", "language-selection", (e) => {selectedStreams.languages = e.detail.value;});
+
 
             let foundOrigins = [];
             for (const stream of streams){
@@ -410,7 +415,10 @@
 
                 }
             }
+            // note: they have to be in reverse order
             createDropdown(foundOrigins, "Origin", "origin-selection", (e) => {selectedStreams.streamOrigin = e.detail.value;});
+            createDropdown(foundLanguages, "Language", "language-selection", (e) => {selectedStreams.languages = e.detail.value;});
+            createDropdown(foundQualities, "Quality", "quality-selection", (e) => {selectedStreams.quality = e.detail.value;});
     }
 
     const observer = new MutationObserver((mutationList, observer) => {
@@ -464,12 +472,12 @@ const intervalId = setInterval(checkElements, 200);
         const style = document.createElement("style");
         style.innerHTML =
 `:root {
-    --dd-bg: #fff;
-    --dd-border: #c9c9c9;
-    --dd-text: #111;
-    --dd-muted: #666;
+    --dd-bg: #000000ff;
+    --dd-border: #111111ff;
+    --dd-text: #ffffffff;
+    --dd-muted: #dbdbdbff;
     --dd-shadow: 0 6px 16px rgba(0,0,0,0.12);
-    --dd-radius: 12px;
+    --dd-radius: 0;
 }
 
 * { box-sizing: border-box; }
@@ -488,18 +496,27 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarel
     justify-content: space-between;
     gap: 8px;
     padding: 10px 12px;
-    background: var(--dd-bg);
-    border: 1px solid var(--dd-border);
+    /*background: var(--dd-bg);*/
     border-radius: var(--dd-radius);
     cursor: pointer;
     user-select: none;
     outline: none;
 }
+.dd-toggle:hover{
+    background: #ffffff13;
+}
 .dd-toggle:focus { box-shadow: 0 0 0 3px rgba(0, 110, 255, .25); }
 .dd-toggle .dd-placeholder { color: var(--dd-muted); }
 
-.dd-caret { flex: 0 0 auto; width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 6px solid #555; }
+.dd-caret { flex: 0 0 auto; width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 6px solid rgb(219, 219, 219); }
 .dropdown.is-open .dd-caret { transform: rotate(180deg); }
+
+.select-choices-wrapper-xGzfs.filter-streams{
+    display: grid;
+    grid-template-columns: auto auto auto;
+    align-items: top;
+    align-content: top;
+}
 
 .dd-list {
     height: fit-content;
@@ -512,23 +529,23 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarel
     border: 1px solid var(--dd-border);
     border-radius: var(--dd-radius);
     box-shadow: var(--dd-shadow);
-    padding: 6px;
     display: none;
+    min-height: 100px;
     max-height: 240px;
     overflow: auto;
 }
 .dropdown.is-open .dd-list { display: block; }
 
 .dd-option {
-    padding: 8px 10px;
-    border-radius: 10px;
+    padding: 12px 16px;
+    border-radius: 0;
     cursor: pointer;
     outline: none;
 }
 .dd-option[aria-selected="true"] { font-weight: 600; }
 .dd-option:hover,
 .dd-option[aria-activedescendant="true"],
-.dd-option.is-active { background: #f1f5f9; }
+.dd-option.is-active { background: #0f0f0fff; }
 
 /* Optional tiny helper for visually hidden text for a11y */
 .visually-hidden { position: absolute !important; height: 1px; width: 1px; overflow: hidden; clip: rect(1px, 1px, 1px, 1px); white-space: nowrap; }
