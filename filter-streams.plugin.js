@@ -2,7 +2,7 @@
  * @name FilterStreams
  * @description Filters a movie's/tv show's episode's streams
  * @updateUrl https://raw.githubusercontent.com/0xA18/stremio-enhanced-plugins/refs/heads/main/versions/filterStreams.txt
- * @version 0.1.0
+ * @version 0.2.0
  * @author a18 corp.
  */
 
@@ -555,5 +555,6 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarel
 }`
         document.body.appendChild(style);
     }();
+
 
 })();
