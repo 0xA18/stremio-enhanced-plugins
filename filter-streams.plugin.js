@@ -2,7 +2,7 @@
  * @name FilterStreams
  * @description Filters a movie's/tv show's episode's streams
  * @updateUrl https://raw.githubusercontent.com/0xA18/stremio-enhanced-plugins/refs/heads/main/versions/filterStreams.txt
- * @version 0.2.0
+ * @version 0.1.3
  * @author a18 corp.
  */
 
@@ -10,38 +10,28 @@
     "use strict";
 
     class DivDropdown {
-        constructor(root, _placeholder) {
+        elem;
+        selected = "All";
+        constructor(root, drop, _placeholder) {
             this.root = root;
-            this.button = root.querySelector('.dd-toggle');
-            this.list = root.querySelector('.dd-list');
-            this.options = Array.from(root.querySelectorAll('.dd-option'));
-            this.labelEl = root.querySelector('.dd-label');
+            this.button = root.querySelector(".multiselect-button-XXdgA.open-TvFQd.button-container-zVLH6");
+
+            this.elem = drop;
             this.placeholder = _placeholder || 'Select';
             this.value = null;
-            this.activeIndex = -1;
 
-            // ARIA setup
-            this.options.forEach((opt, i) => {
-            if (!opt.id) opt.id = this._uid('ddopt');
-            opt.setAttribute('tabindex', '-1');
-            });
-
-            this._renderLabel();
-            this._bind();
+            this.button.addEventListener('click', () => this.toggle());
+            
         }
 
         _uid(prefix) { return `${prefix}-${Math.random().toString(36).slice(2, 9)}`; }
 
         _bind() {
             // Toggle open/close
-            this.button.addEventListener('click', () => this.toggle());
             this.button.addEventListener('keydown', (e) => this._onButtonKey(e));
 
             // Option click
-            this.options.forEach((opt, i) => {
-                opt.addEventListener('click', () => { this._commit(i); this.close(); this.button.focus(); });
-                opt.addEventListener('mousemove', () => this._setActive(i));
-            });
+            
 
             // Keyboard on list
             this.list.addEventListener('keydown', (e) => this._onListKey(e));
@@ -59,6 +49,23 @@
         }
 
         open() {
+            this.root.appendChild(this.elem);
+            this.list = this.root.querySelector('.dd-list');
+            this.options = Array.from(this.root.querySelectorAll('.dd-option'));
+            this.labelEl = this.root.querySelector('.label-SoEGc');
+            this.activeIndex = -1;
+            this.root.querySelector(".icon-gQU96").classList.add("open-TvFQd");
+            // ARIA setup
+            this.options.forEach((opt, i) => {
+                if (!opt.id) opt.id = this._uid('ddopt');
+                opt.setAttribute('tabindex', '-1');
+            });
+
+
+
+            //this._renderLabel();
+            this._bind();
+
             if (this.root.classList.contains('is-open')) return;
             this.root.classList.add('is-open');
             this.button.setAttribute('aria-expanded', 'true');
@@ -69,12 +76,36 @@
             }
             this.list.focus({ preventScroll: false });
             this._scrollActiveIntoView();
+
+            this.options.forEach((opt, i) => {
+                opt.addEventListener('click', () => {
+                    this._commit(i); this.close(); this.button.focus();
+                    if (opt.textContent.replaceAll(" ", "").replaceAll("\n", "") == "All")
+                    this._renderLabel();
+                });
+                opt.addEventListener('mousemove', () => this._setActive(i));
+            });
+
+            this.root.querySelector(".dropdown-MWaxp.open-yuN4f.dd-list").addEventListener("click", () => {
+                this.close();
+            });
+
+            this.options.forEach((opt, i) => {
+                if (opt.textContent.replaceAll(" ", "").replaceAll("\n", "").toLowerCase() == this.selected.toLowerCase()){
+                    const icon = document.createElement("div");
+                    icon.className = "icon-I_g2q";
+                    opt.appendChild(icon);
+                }
+            });
         }
 
         close() {
             if (!this.root.classList.contains('is-open')) return;
             this.root.classList.remove('is-open');
             this.button.setAttribute('aria-expanded', 'false');
+            this.root.querySelector(".icon-I_g2q")?.remove();
+            this.root.querySelector(".dd-list").remove();
+            this.root.querySelector(".icon-gQU96").classList.remove("open-TvFQd");
         }
 
         toggle() { this.root.classList.contains('is-open') ? this.close() : this.open(); }
@@ -328,36 +359,49 @@
     function createDropdown(found, text, className, onChange){
         if (found.length < 2) return;
         const selector1 = document.createElement("div");
-        selector1.innerHTML = `<div class="dd-toggle" role="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="dd-list-1" tabindex="0">
-                <span class="dd-label dd-placeholder">${text}</span>
-                <span class="dd-caret" aria-hidden="true"></span>
+        selector1.innerHTML = 
+            `<div tabindex="0" aria-haspopup="listbox" aria-expanded="true" class="multiselect-button-XXdgA open-TvFQd button-container-zVLH6">
+                <div class="label-SoEGc">${text}</div>
+                <svg class="icon-gQU96" viewBox="0 0 512 512">
+                <path d="M93.10000000000036 203.24199999999996l144.9 161.225c2.1 2.411 4.7 4.365 7.6 5.733 2.9 1.414 6.1 2.264 9.4 2.503 3.2 0.239 6.5-0.14 9.6-1.113 3.1-0.984 6-2.531 8.5-4.556 0.9-0.758 1.8-1.619 2.6-2.567l144.9-161.225c3.1-3.467 4.9-7.684 5.6-12.168 0.7-4.486 0-9.068-1.9-13.184-2-4.13-5.2-7.627-9.2-10.076s-8.7-3.747-13.5-3.738h-289.7c-3.3-0.009-6.6 0.595-9.6 1.781-4.6 1.768-8.5 4.808-11.1 8.722-2.7 3.906-4.2 8.483-4.2 13.168 0.1 5.694 2.3 11.175 6.1 15.495" style="fill: currentcolor;"></path>
+                </svg>
             </div>`;
-        selector1.classList.add("dropdown", "observer-ignore", className);
+        selector1.classList.add("dropdown", "observer-ignore", className, "multiselect-menu-qMdaj", "select-input-container-irGn_");
+        
         selector1.addEventListener('change', (e) => {
-            //console.log(selectedStreams);
             onChange(e);
             filterStreams(e);
+            dropObj.selected = e.detail.value;
         });
         //selector.appendChild(selector1);
 
         const dropdown = document.createElement("div");
-        dropdown.innerHTML = '<div class="dd-option" role="option" aria-selected="false" data-value="all" tabindex="-1">All</div>';
+        dropdown.innerHTML =
+        `
+            <div tabindex="0" aria-selected="true" class="dd-option option-HcOSE undefined button-container-zVLH6">
+                <div class="label-IR8xX">All</div>
+            </div>
+        `;
+        dropdown.className = "dropdown-MWaxp open-yuN4f dd-list";
+        dropdown.role = "option";
         dropdown.tabIndex = 0;
         dropdown.ariaExpanded = "false";
         dropdown.classList.add("dd-list");
+
         
-        selector1.appendChild(dropdown);
+        //selector1.appendChild(dropdown);
+        
         for (const obj of found){
             if (obj != "undefined" && obj){
                 const newElem = document.createElement("div");
                 newElem.tabIndex = 0;
                 newElem.ariaSelected = "false";
-                newElem.classList.add("dd-option");
+                newElem.classList.add("dd-option", "option-HcOSE", "button-container-zVLH6");
                 newElem.id = "dd-list-1";
                 //newElem.tabIndex = "-1";
                 newElem.role = "option";
                 const elemTitle = document.createElement("div");
-                //elemTitle.classList.add("label-IR8xX");
+                elemTitle.classList.add("label-IR8xX");
                 elemTitle.textContent = obj;
                 newElem.appendChild(elemTitle);
 
@@ -365,7 +409,12 @@
             }
         }
 
-        new DivDropdown(selector1, text);
+        const dropObj = new DivDropdown(selector1, dropdown, text);
+
+        // selector1.addEventListener("click", () => {
+        //     selector1.appendChild(dropdown);
+        //     new DivDropdown(selector1, text);
+        // });
 
         const parent = document.querySelector(".select-choices-wrapper-xGzfs.filter-streams");
         parent.insertBefore(selector1, parent.firstChild);
@@ -471,90 +520,15 @@ const intervalId = setInterval(checkElements, 200);
     window.onload = function(){
         const style = document.createElement("style");
         style.innerHTML =
-`:root {
-    --dd-bg: #000000ff;
-    --dd-border: #111111ff;
-    --dd-text: #ffffffff;
-    --dd-muted: #dbdbdbff;
-    --dd-shadow: 0 6px 16px rgba(0,0,0,0.12);
-    --dd-radius: 0;
+`
+.dropdown{
+    min-width: 0!important;
 }
-
-* { box-sizing: border-box; }
-body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji"; padding: 24px; color: var(--dd-text); }
-
-.dropdown {
-    position: relative;
-    width: 100%;
-    height: fit-content;
-    min-height: fit-content;
+.filter-streams{
+    z-index: 999!important;
 }
-
-.dd-toggle {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    padding: 10px 12px;
-    /*background: var(--dd-bg);*/
-    border-radius: var(--dd-radius);
-    cursor: pointer;
-    user-select: none;
-    outline: none;
-}
-.dd-toggle:hover{
-    background: #ffffff13;
-}
-.dd-toggle:focus { box-shadow: 0 0 0 3px rgba(0, 110, 255, .25); }
-.dd-toggle .dd-placeholder { color: var(--dd-muted); }
-
-.dd-caret { flex: 0 0 auto; width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 6px solid rgb(219, 219, 219); }
-.dropdown.is-open .dd-caret { transform: rotate(180deg); }
-
-.select-choices-wrapper-xGzfs.filter-streams{
-    display: grid;
-    grid-template-columns: auto auto auto;
-    align-items: top;
-    align-content: top;
-}
-
-.dd-list {
-    height: fit-content;
-    /* position: absolute; */
-    z-index: 9999;
-    top: calc(100% + 6px);
-    left: 0;
-    right: 0;
-    background: var(--dd-bg);
-    border: 1px solid var(--dd-border);
-    border-radius: var(--dd-radius);
-    box-shadow: var(--dd-shadow);
-    display: none;
-    min-height: 100px;
-    max-height: 240px;
-    overflow: auto;
-}
-.dropdown.is-open .dd-list { display: block; }
-
-.dd-option {
-    padding: 12px 16px;
-    border-radius: 0;
-    cursor: pointer;
-    outline: none;
-}
-.dd-option[aria-selected="true"] { font-weight: 600; }
-.dd-option:hover,
-.dd-option[aria-activedescendant="true"],
-.dd-option.is-active { background: #0f0f0fff; }
-
-/* Optional tiny helper for visually hidden text for a11y */
-.visually-hidden { position: absolute !important; height: 1px; width: 1px; overflow: hidden; clip: rect(1px, 1px, 1px, 1px); white-space: nowrap; }
-
-.observer-ignore{
-    min-width: fit-content;
-}`
+`
         document.body.appendChild(style);
     }();
-
 
 })();
