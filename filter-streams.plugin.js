@@ -2,7 +2,7 @@
  * @name FilterStreams
  * @description Filters a movie's/tv show's episode's streams
  * @updateUrl https://raw.githubusercontent.com/0xA18/stremio-enhanced-plugins/refs/heads/main/versions/filterStreams.txt
- * @version 0.1.3
+ * @version 0.1.4
  * @author a18 corp.
  */
 
@@ -255,7 +255,6 @@
         // Happy.gilmore.2.2025.1080p-dual-lat-cinecalidad.rs.mp4
         // 👤 76 💾 2.1 GB ⚙️ Cinecalidad
         // Dual Audio / 🇲🇽
-        //console.log(year);
 
         // Wednesday.S01.2160p.NF.WEB-DL.x265.10bit.HDR.DDP5.1.Atmos-APEX
         // Wednesday.S01E01.Wednesdays.Child.is.Full.of.Woe.2160p.NF.WEB-DL.DDP5.1.Atmos.DV.HDR.H.265-APEX.mkv
@@ -300,10 +299,8 @@
                 streamOrigin,
                 codecs,
             }));
-            //console.log(link[1]);
         });
 
-        //console.log(results);
         return results;
     }
 
@@ -431,104 +428,72 @@
                 })
             .filter(Boolean); // remove nulls
             // Optional: log or return the links
-            const filmYear = document.querySelector(".release-info-label-LPJMB").innerHTML;
-            const streams = parseStreamElements(streamLinks, filmYear);
-            
-            const container = document.createElement("div");
-            container.classList.add("select-choices-wrapper-xGzfs", "filter-streams");
-            const parent = document.querySelector(".streams-list-Y1lCM.streams-list-container-xYMJo");
-            parent.insertBefore(container, parent.firstChild);
+        console.log(document.readyState);
 
-            let foundQualities = [];
-            for (const stream of streams){
-                if (!foundQualities.includes(stream.quality))
-                    foundQualities.push(stream.quality);
-            }
+        const filmYear = document.querySelector(".release-info-label-LPJMB").innerHTML;
+        const streams = parseStreamElements(streamLinks, filmYear);
+        
+        const container = document.createElement("div");
+        container.classList.add("select-choices-wrapper-xGzfs", "filter-streams");
+        const parent = document.querySelector(".streams-list-Y1lCM.streams-list-container-xYMJo");
+        parent.insertBefore(container, parent.firstChild);
 
-            let foundLanguages = [];
-            for (const stream of streams){
-                if (stream.languages != undefined){
-                    for (const lang of stream.languages){
-                        if (!foundLanguages.includes(lang))
-                            foundLanguages.push(lang);
-                    }
-                }
-                
-            }
-
-
-            let foundOrigins = [];
-            for (const stream of streams){
-                if (!foundOrigins.includes(stream.streamOrigin)){
-                    foundOrigins.push(stream.streamOrigin);
-
-                }
-            }
-            // note: they have to be in reverse order
-            createDropdown(foundOrigins, "Origin", "origin-selection", (e) => {selectedStreams.streamOrigin = e.detail.value;});
-            createDropdown(foundLanguages, "Language", "language-selection", (e) => {selectedStreams.languages = e.detail.value;});
-            createDropdown(foundQualities, "Quality", "quality-selection", (e) => {selectedStreams.quality = e.detail.value;});
-    }
-
-    const observer = new MutationObserver((mutationList, observer) => {
-        for (let i = 0; i < mutationList.length; i++) {
-            for (const node of mutationList[i].addedNodes){
-                if (node.nodeType === 1 && node.classList.contains("observer-ignore")) return;
-            }
-
-            //console.log(i);
-            if (!mutationList[i].target.classList.contains("streams-list-Y1lCM")) break;
-            const mainContainer = document.querySelector('.streams-list-Y1lCM');
-            if (!mainContainer) {
-                console.warn('Main container not found.');
-                break;
-            }
-
-            if (mainContainer.querySelector(".dropdown.observer-ignore.quality-selection" || mainContainer.querySelector(".dropdown.observer-ignore.language-selection"))){
-                //mainContainer.querySelector(".dropdown.observer-ignore.quality-selection").remove();
-                return;
-            }
-
-            const streamsContainer = mainContainer.querySelector('.streams-container-bbSc4');
-            if (!streamsContainer) {
-                console.warn('Streams container not found.');
-                break;
-            }
-
-            
-
-            createFilters();
+        let foundQualities = [];
+        for (const stream of streams){
+            if (!foundQualities.includes(stream.quality))
+                foundQualities.push(stream.quality);
         }
 
-    });
-    observer.observe(document.body, { childList: true, subtree: true });
+        let foundLanguages = [];
+        for (const stream of streams){
+            if (stream.languages != undefined){
+                for (const lang of stream.languages){
+                    if (!foundLanguages.includes(lang))
+                        foundLanguages.push(lang);
+                }
+            }
+            
+        }
+
+
+        let foundOrigins = [];
+        for (const stream of streams){
+            if (!foundOrigins.includes(stream.streamOrigin)){
+                foundOrigins.push(stream.streamOrigin);
+
+            }
+        }
+        // note: they have to be in reverse order
+        createDropdown(foundOrigins, "Origin", "origin-selection", (e) => {selectedStreams.streamOrigin = e.detail.value;});
+        createDropdown(foundLanguages, "Language", "language-selection", (e) => {selectedStreams.languages = e.detail.value;});
+        createDropdown(foundQualities, "Quality", "quality-selection", (e) => {selectedStreams.quality = e.detail.value;});
+    }
 
     
     function checkElements() {
-    const existsStreamsList = document.querySelector('.streams-list-Y1lCM');
-    const missingDropdown = !document.querySelector('.dropdown.observer-ignore');
-    const streamsInited = document.querySelector(".label-container-XOyzm.stream-container-JPdah.button-container-zVLH6");
+        const existsStreamsList = document.querySelector('.streams-list-Y1lCM');
+        const missingDropdown = !document.querySelector('.dropdown.observer-ignore');
+        const streamsInited = document.querySelector(".label-container-XOyzm.stream-container-JPdah.button-container-zVLH6");
 
-    if (existsStreamsList && missingDropdown && streamsInited) {
-        console.log("there is!");
-        createFilters();
+        if (existsStreamsList && missingDropdown && streamsInited) {
+            createFilters();
+        }
     }
-}
 
-const intervalId = setInterval(checkElements, 200);
+    const intervalId = setInterval(checkElements, 200);
 
     window.onload = function(){
         const style = document.createElement("style");
         style.innerHTML =
-`
-.dropdown{
-    min-width: 0!important;
-}
-.filter-streams{
-    z-index: 999!important;
-}
-`
-        document.body.appendChild(style);
-    }();
+    `
+    .dropdown{
+        min-width: 0!important;
+    }
+    .filter-streams{
+        z-index: 999!important;
+    }
+    `
+            document.body.appendChild(style);
+        }();
 
 })();
