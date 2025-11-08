@@ -2,7 +2,7 @@
  * @name FilterStreams
  * @description Filters a movie's/tv show's episode's streams
  * @updateUrl https://raw.githubusercontent.com/0xA18/stremio-enhanced-plugins/refs/heads/main/versions/filterStreams.txt
- * @version 0.1.4
+ * @version 0.1.5
  * @author a18 corp.
  */
 
@@ -226,13 +226,14 @@
     }
 
     class StreamInfo {
-        constructor({ title, languages, quality, size, streamOrigin, codecs }) {
+        constructor({ title, languages, quality, size, streamOrigin, codecs, colorRange }) {
             this.title = title;
             this.languages = languages;
             this.quality = quality;
             this.size = size;
             this.streamOrigin = streamOrigin;
             this.codecs = codecs;
+            this.colorRange = colorRange;
         }
     }
 
@@ -291,6 +292,11 @@
             const qualityPattern = /\b(4K|1080p|720p|576p|480p|BDRip|BRRip|HDRip|DVDRip|WEBRip|WEB-DL|BluRay)\b/gi;
             const quality = Array.from(link[1].matchAll(qualityPattern), m => m[1])[0];
 
+            const colorRangePattern = /\b(SDR|HDR|HDR10|DV|Dolby Vision)\b/gi;
+            const match = Array.from(link[1].matchAll(colorRangePattern), m => m[1])[0];
+            const colorRange = match ?? 'SDR';
+            console.log("Color Range found: ", colorRange);
+
             results.push(new StreamInfo({
                 titleRaw,
                 languages,
@@ -298,6 +304,7 @@
                 size,
                 streamOrigin,
                 codecs,
+                colorRange,
             }));
         });
 
@@ -310,7 +317,8 @@
         quality: "all", 
         size: "all", 
         streamOrigin: "all", 
-        codecs: "all"
+        codecs: "all",
+        colorRange: "all"
     });
     // TODO: remove non-found streams from dropdown
     function filterStreams(e) {
@@ -331,16 +339,32 @@
 
             const languageMatch =
                 streamRight.textContent.includes(selectedStreams.languages) ||
-                selectedStreams.languages === "all";
+                selectedStreams.languages.toLowerCase() === "all";
 
             const faceLine = getStreamFaceLine(streamRight.textContent);
             let originMatch = undefined;
             if (faceLine){
                 originMatch = faceLine.includes(selectedStreams.streamOrigin) ||
-                selectedStreams.streamOrigin === "all";
+                selectedStreams.streamOrigin.toLowerCase() === "all";
+            }
+            
+            let colorRangeMatch = undefined;
+            if (streamLeft.textContent.includes(selectedStreams.colorRange) ||
+                selectedStreams.colorRange.toLowerCase() === "all"){
+                colorRangeMatch = true;
+            } else {
+                if (selectedStreams.colorRange == "SDR" &&
+                    !streamLeft.textContent.includes("HDR") &&
+                    !streamLeft.textContent.includes("HDR10") &&
+                    !streamLeft.textContent.includes("DV") &&
+                    !streamLeft.textContent.includes("Dolby Vision"))
+                    colorRangeMatch = true;
+                else
+                    colorRangeMatch = false;
             }
 
-            if (qualityMatch && languageMatch && originMatch) {
+
+            if (qualityMatch && languageMatch && originMatch && colorRangeMatch) {
                 elem.style.visibility = "visible";
                 elem.style.position = "relative";
             } else {
@@ -348,6 +372,9 @@
                 elem.style.position = "absolute";
                 hiddenStreams++;
             }
+
+            console.log(faceLine, qualityMatch, languageMatch, originMatch);
+            console.log(selectedStreams);
 
             allStreams++;
         }
@@ -413,8 +440,12 @@
         //     new DivDropdown(selector1, text);
         // });
 
-        const parent = document.querySelector(".select-choices-wrapper-xGzfs.filter-streams");
-        parent.insertBefore(selector1, parent.firstChild);
+        const parents = document.querySelectorAll(".select-choices-wrapper-xGzfs.filter-streams");
+        console.log("Parents found: ", parents[0].querySelectorAll(".dropdown").length);
+        if (parents[0].querySelectorAll(".dropdown").length < 2)
+            parents[0].insertBefore(selector1, parents[0].firstChild);
+        else
+            parents[1].insertBefore(selector1, parents[1].firstChild);
     }
 
     function createFilters(){
@@ -434,8 +465,11 @@
         const streams = parseStreamElements(streamLinks, filmYear);
         
         const container = document.createElement("div");
-        container.classList.add("select-choices-wrapper-xGzfs", "filter-streams");
+        container.classList.add("select-choices-wrapper-xGzfs", "filter-streams", "first-index");
+        const container2 = document.createElement("div");
+        container2.classList.add("select-choices-wrapper-xGzfs", "filter-streams", "second-index");
         const parent = document.querySelector(".streams-list-Y1lCM.streams-list-container-xYMJo");
+        parent.insertBefore(container2, parent.firstChild);
         parent.insertBefore(container, parent.firstChild);
 
         let foundQualities = [];
@@ -455,7 +489,6 @@
             
         }
 
-
         let foundOrigins = [];
         for (const stream of streams){
             if (!foundOrigins.includes(stream.streamOrigin)){
@@ -463,7 +496,15 @@
 
             }
         }
+
+        let foundColorRanges = [];
+        for (const stream of streams){
+            if (!foundColorRanges.includes(stream.colorRange)){
+                foundColorRanges.push(stream.colorRange);
+            }
+        }
         // note: they have to be in reverse order
+        createDropdown(foundColorRanges, "Color Range", "color-range-selection", (e) => {selectedStreams.colorRange = e.detail.value;});
         createDropdown(foundOrigins, "Origin", "origin-selection", (e) => {selectedStreams.streamOrigin = e.detail.value;});
         createDropdown(foundLanguages, "Language", "language-selection", (e) => {selectedStreams.languages = e.detail.value;});
         createDropdown(foundQualities, "Quality", "quality-selection", (e) => {selectedStreams.quality = e.detail.value;});
@@ -489,8 +530,12 @@
     .dropdown{
         min-width: 0!important;
     }
-    .filter-streams{
+    .first-index{
         z-index: 999!important;
+        position: relative!important;
+    }
+    .second-index{
+        z-index: 998!important;
     }
     `
             document.body.appendChild(style);
