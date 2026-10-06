@@ -2,7 +2,7 @@
  * @name FilterStreams
  * @description Filters a movie's/tv show's episode's streams
  * @updateUrl https://raw.githubusercontent.com/0xA18/stremio-enhanced-plugins/refs/heads/main/versions/filterStreams.txt
- * @version 0.1.5
+ * @version 0.1.6
  * @author a18 corp.
  */
 
@@ -13,8 +13,8 @@
         elem;
         selected = "All";
         constructor(root, drop, _placeholder) {
-            this.root = root;
-            this.button = root.querySelector(".multiselect-button-XXdgA.open-TvFQd.button-container-zVLH6");
+            this.root = root; 
+            this.button = root.querySelector(".button-teWrC.button-container-zVLH6");
 
             this.elem = drop;
             this.placeholder = _placeholder || 'Select';
@@ -52,9 +52,9 @@
             this.root.appendChild(this.elem);
             this.list = this.root.querySelector('.dd-list');
             this.options = Array.from(this.root.querySelectorAll('.dd-option'));
-            this.labelEl = this.root.querySelector('.label-SoEGc');
+            this.labelEl = this.root.querySelector('.text-RJAMZ');
             this.activeIndex = -1;
-            this.root.querySelector(".icon-gQU96").classList.add("open-TvFQd");
+            this.root.querySelector(".icon-dercP").classList.add("open-TvFQd");
             // ARIA setup
             this.options.forEach((opt, i) => {
                 if (!opt.id) opt.id = this._uid('ddopt');
@@ -105,7 +105,7 @@
             this.button.setAttribute('aria-expanded', 'false');
             this.root.querySelector(".icon-I_g2q")?.remove();
             this.root.querySelector(".dd-list").remove();
-            this.root.querySelector(".icon-gQU96").classList.remove("open-TvFQd");
+            this.root.querySelector(".icon-dercP").classList.remove("open-TvFQd");
         }
 
         toggle() { this.root.classList.contains('is-open') ? this.close() : this.open(); }
@@ -384,9 +384,9 @@
         if (found.length < 2) return;
         const selector1 = document.createElement("div");
         selector1.innerHTML = 
-            `<div tabindex="0" aria-haspopup="listbox" aria-expanded="true" class="multiselect-button-XXdgA open-TvFQd button-container-zVLH6">
-                <div class="label-SoEGc">${text}</div>
-                <svg class="icon-gQU96" viewBox="0 0 512 512">
+            `<div tabindex="0" aria-haspopup="listbox" aria-expanded="true" class="button-teWrC button-container-zVLH6">
+                <div class="text-RJAMZ">${text}</div>
+                <svg class="icon-dercP" viewBox="0 0 512 512">
                 <path d="M93.10000000000036 203.24199999999996l144.9 161.225c2.1 2.411 4.7 4.365 7.6 5.733 2.9 1.414 6.1 2.264 9.4 2.503 3.2 0.239 6.5-0.14 9.6-1.113 3.1-0.984 6-2.531 8.5-4.556 0.9-0.758 1.8-1.619 2.6-2.567l144.9-161.225c3.1-3.467 4.9-7.684 5.6-12.168 0.7-4.486 0-9.068-1.9-13.184-2-4.13-5.2-7.627-9.2-10.076s-8.7-3.747-13.5-3.738h-289.7c-3.3-0.009-6.6 0.595-9.6 1.781-4.6 1.768-8.5 4.808-11.1 8.722-2.7 3.906-4.2 8.483-4.2 13.168 0.1 5.694 2.3 11.175 6.1 15.495" style="fill: currentcolor;"></path>
                 </svg>
             </div>`;
